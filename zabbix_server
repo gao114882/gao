@@ -34,3 +34,80 @@ DBPassword=zabbix
 8.启动httpd 
 
 9.启动zabbix_agent zabbix_server
+
+logstash.conf配置
+
+input {
+ 12 file {
+ 13         path => ["/home/ruishi/log/fas.log","/home/ruishi/log/das.log"]
+ 14             #start_position => "beginning"
+ 15             stat_interval => "2"
+ 16     }
+ 17 }
+ 18 
+ 19 filter {
+ 20     if [message] !~  "error|ERROR|Exception" {
+ 21         ruby  {
+ 22             code => "event.cancel"
+ 23         }   
+ 24     }   
+ 25 }   
+ 26 
+ 27 output {
+ 28   elasticsearch {
+ 29     hosts => ["http://localhost:9200"]
+ 30     index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
+ 31     #user => "elastic"
+ 32     #password => "changeme"
+ 33   } 
+ 34   stdout { codec => rubydebug }
+ 35 } 
+
+
+elk sentinl 邮件配置
+{
+  "actions": {
+    "Email_alarm_26c3072f-c8f5-42db-ac47-bf38dbc20d98": {
+      "name": "Email alarm",
+      "throttle_period": "2m",
+      "email": {
+        "priority": "high",
+        "stateless": false,
+        "body": "event:{{payload.hits.total}} errorMsgConent:{{payload.hits.hits.0._source.message}}",
+        "to": [
+          "gaoqs1177@3irobotics.com",
+          "yufb1026@3irobotics.com"
+        ],
+        "from": "noreply@3irobotics.net",
+        "subject": "Sentinl Alarm"
+      }
+    }
+  },
+  "input": {
+    "search": {
+      "request": {
+        "index": [
+          "%{[@metadata][beat]}-%{[@metadata][version]}-2018.11.14"
+        ],
+        "body": {}
+      }
+    }
+  },
+  "condition": {
+    "script": {
+      "script": "payload.hits.total >= 20"
+    }
+  },
+  "trigger": {
+    "schedule": {
+      "later": "every 30 minutes"
+    }
+  },
+  "disable": false,
+  "report": false,
+  "title": "errorlog",
+  "save_payload": false,
+  "spy": false,
+  "impersonate": false
+}
+

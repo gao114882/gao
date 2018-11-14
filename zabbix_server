@@ -7,4 +7,30 @@
 
 2. yum install zabbix-server-pgsql zabbix-web-pgsql zabbix-agent
 
-3.
+3.创建postgresql 的zabbix 用户
+createuser -P -s -e zabbix 
+CREATE DATABASE zabbix OWNER zabbix;
+GRANT ALL PRIVILEGES ON DATABASE zabbix TO zabbix;
+zcat /usr/share/doc/zabbix-server-pgsql*/create.sql.gz |  psql -Uzabbix zabbix
+ 
+4.创建用户zabbix
+adduser zabbix 
+passwd zabbix
+
+
+5.更改/etc/php.ini的配置
+
+
+
+6.修改zabbix/conf下的zabbix.conf.php DB改为：POSTGRESQL 
+cp -a  /usr/share/zabbix/*  /var/www/html/zabbix
+chown -R apache:apache /var/www/html/zabbix
+
+7.更改zabbix.conf配置
+DBName=zabbix
+DBUser=zabbix
+DBPassword=zabbix
+
+8.启动httpd 
+
+9.启动zabbix_agent zabbix_server
